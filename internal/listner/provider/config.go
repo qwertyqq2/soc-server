@@ -12,6 +12,9 @@ type Config struct {
 		ProviderURL          string `yaml:"provider_url"`
 		GroupContractAddress string `yaml:"group_address"`
 	} `yaml:"params_listner"`
+	DB struct {
+		DbUrl string `yaml:"db_url"`
+	} `yaml:"db"`
 }
 
 var once sync.Once

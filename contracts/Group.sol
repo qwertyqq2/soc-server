@@ -8,15 +8,16 @@ import "./libraries/Proof.sol";
 import "./libraries/JumpSnap.sol";
 
 contract Group {
-    event CreateRoundEvent(address _roundAddress);
+    event CreateRoundEvent(address _roundAddress, uint256 _deposit);
 
-    event EnterRoundEvent(address _sender);
+    event EnterRoundEvent(address _roundAddress, address _sender);
 
-    event StartRoundEvent(uint _bsnap, uint _psnap);
+    event StartRoundEvent(address _roundAddress, uint _bsnap, uint _psnap);
 
-    event CreatedLotEvent(address _lotAddr);
+    event CreatedLotEvent(address _roundAddress, address _lotAddr);
 
     event NewLotEvent(
+         address _roundAddress,
          address _lotAddr,
          uint256 _timeFirst,
          uint256 _timeSecond,
@@ -28,6 +29,7 @@ contract Group {
 
 
     event BuyLotEvent(
+        address _roundAddress,
         address _lotAddr,
         address _sender,
         uint256 _price,
@@ -36,11 +38,13 @@ contract Group {
     );
 
     event SendLotEvent(
+        address _roundAddress,
         address _lotAddr,
         uint256 _receiveTokens
     );
 
     event UpdatePlayerParams(
+        address _roundAddress,
         address _owner,
         uint256 _nwin, 
         uint256 _n,
@@ -50,6 +54,7 @@ contract Group {
 
 
     event ReceiveLotEvent(
+        address _roundAddress,
         address _lotAddr,
         address _owner,
         uint _balance,
@@ -79,14 +84,14 @@ contract Group {
     function CreateRound(uint256 _deposit) public onlyOwner{
         Round round = new Round(_deposit);
         roundAddr = address(round);
-        emit CreateRoundEvent(address(round));
+        emit CreateRoundEvent(address(round), _deposit);
     }
 
     function Enter() public payable {
         IRound round = IRound(roundAddr);
         round.Enter(msg.sender, msg.value);
         payable(roundAddr).transfer(msg.value);
-        emit EnterRoundEvent(msg.sender);
+        emit EnterRoundEvent(roundAddr, msg.sender);
     }
 
     function StartRound() public {
@@ -94,13 +99,13 @@ contract Group {
         uint bsnap;
         uint psnap;
         (bsnap, psnap) = round.StartRound();
-        emit StartRoundEvent(bsnap, psnap);
+        emit StartRoundEvent(roundAddr, bsnap, psnap);
     }
 
     function CreateLot() external{
         IRound round = IRound(roundAddr);
         address lotAddr = round.CreateLot();
-        emit CreatedLotEvent(lotAddr);
+        emit CreatedLotEvent(roundAddr, lotAddr);
     }
 
     modifier onlyPlayer() {
@@ -124,6 +129,7 @@ contract Group {
         uint balancesSnap;
         (lotSnap, balancesSnap) = round.NewLot(_lotAddr, _timeFirst, _timeSecond, _val, proof);
          emit NewLotEvent(
+             roundAddr,
              _lotAddr,
              _timeFirst,
              _timeSecond,
@@ -155,6 +161,7 @@ contract Group {
         uint balancesSnap;
         (lotSnap, balancesSnap) = round.BuyLot(_lotAddr, proofRes, proofEP);
         emit BuyLotEvent(
+            roundAddr,
             _lotAddr,
             msg.sender,
             _price,
@@ -171,7 +178,7 @@ contract Group {
         Params.InitParams memory initParams = Params.DecodeInitParams(initParamsData);
         IRound round = IRound(roundAddr);
         uint amountOut = round.SendLot(_lotAddr, initParams);
-        emit SendLotEvent(_lotAddr, amountOut);
+        emit SendLotEvent(roundAddr, _lotAddr, amountOut);
     }
 
     function ReceiveLot(
@@ -191,6 +198,7 @@ contract Group {
         (newParamsData, newBalance) = round.ReceiveLot(_lotAddr, initParams, proof, params);
         Params.PlayerParams memory NewParams = Params.DecodePlayerParamsInTuple(newParamsData);
         emit UpdatePlayerParams(
+            roundAddr, 
             NewParams.owner, 
             NewParams.nwin,
             NewParams.n,
@@ -199,6 +207,7 @@ contract Group {
         uint bsnap = round.GetBalancesSnap();
         uint psnap = round.GetParamsSnap();
         emit ReceiveLotEvent(
+            roundAddr,
             _lotAddr,
             _owner,
             newBalance,
