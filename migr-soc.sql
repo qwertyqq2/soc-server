@@ -1,16 +1,16 @@
 CREATE TABLE `Rounds` (
-	`address` varchar(255) NOT NULL,
-	`deposit` INT(255) NOT NULL,
-	`bsnap` INT(255),
-	`psnap` INT(255),
-	`Spos` INT(255),
-	`Sneg` INT(255),
-	`reserve` INT(255)
+	`address` VARCHAR(255) NOT NULL,
+	`deposit` VARCHAR(255) NOT NULL,
+	`bsnap` VARCHAR(255) DEFAULT '',
+	`psnap` VARCHAR(255) DEFAULT '',
+	`Spos` VARCHAR(255) DEFAULT '',
+	`Sneg` VARCHAR(255) DEFAULT '',
+	`reserve` VARCHAR(255) DEFAULT ''
 );
 
 CREATE TABLE `PendingPlayers` (
-	`sender` varchar(255) NOT NULL,
-	`roundAddress` varchar(255) NOT NULL
+	`sender` VARCHAR(255) NOT NULL,
+	`roundAddress` VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE `Players` (
@@ -19,20 +19,20 @@ CREATE TABLE `Players` (
 	`balance` INT(255),
 	`nwin` INT(255),
 	`n` INT(255),
-	`spos` INT(255),
-	`sneg` INT(255)
+	`spos` VARCHAR(255) DEFAULT '',
+	`sneg` VARCHAR(255) DEFAULT ''
 );
 
 CREATE TABLE `Lots` (
 	`address` varchar(255) NOT NULL,
 	`roundAddress` varchar(255) NOT NULL,
 	`owner` varchar(255),
-	`timeFirst` INT(255),
-	`timeSecond` INT(255),
-	`value` INT(255),
+	`timeFirst` VARCHAR(255),
+	`timeSecond` VARCHAR(255),
+	`value` VARCHAR(255) DEFAULT '',
 	`price` INT(255),
-	`receiveTokens` INT(255),
-	`snapshot` INT(255)
+	`receiveTokens` VARCHAR(255) DEFAULT '',
+	`snapshot` VARCHAR(255) DEFAULT ''
 );
 
 ALTER TABLE `PendingPlayers` ADD CONSTRAINT `PendingPlayers_fk0` FOREIGN KEY (`roundAddress`) REFERENCES `Rounds`(`address`);

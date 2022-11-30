@@ -81,8 +81,14 @@ library Params {
                         params.spos, 
                         params.sneg
                         )));
-        }
+    }
 
+    function GetSnapNullPlayer(PlayerParams calldata params)
+        public pure returns(uint){
+            return uint(
+                keccak256(abi.encodePacked(params.owner, uint(0), uint(0), uint(0), uint(0)))
+                );
+        }
 
     function GetSnapParamPlayerOut(
         address _owner, 

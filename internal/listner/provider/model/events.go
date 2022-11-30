@@ -31,6 +31,7 @@ type CreatedLotEvent struct {
 type NewLotEvent struct {
 	RoundAddr    common.Address `abi:"_roundAdd"`
 	LotAddr      common.Address `abi:"_lotAddr"`
+	Owner        common.Address `abi:"_owner"`
 	TimeFirst    *big.Int       `abi:"_timeFirst"`
 	TimeSecond   *big.Int       `abi:"_timeSecond"`
 	Price        *big.Int       `abi:"_price"`

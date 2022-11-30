@@ -106,12 +106,18 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
+				if err := p.store.Repository().EnterRound(enterRoundEvent); err != nil {
+					return err
+				}
 				log.Println("event-enter round: ", enterRoundEvent)
 
 			case model.StartRoundEventHash:
 				startRoundEvent := &model.StartRoundEvent{}
 				err := groupAbi.UnpackIntoInterface(startRoundEvent, "StartRoundEvent", logEvent.Data)
 				if err != nil {
+					return err
+				}
+				if err := p.store.Repository().StartRound(startRoundEvent); err != nil {
 					return err
 				}
 				log.Println("event-start round: ", startRoundEvent)
@@ -122,12 +128,18 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
+				if err := p.store.Repository().CreateLot(createLotEvent); err != nil {
+					return err
+				}
 				log.Println("event-create lot: ", createLotEvent)
 
 			case model.NewLotEventHash:
 				newLotEvent := &model.NewLotEvent{}
 				err := groupAbi.UnpackIntoInterface(newLotEvent, "NewLotEvent", logEvent.Data)
 				if err != nil {
+					return err
+				}
+				if err := p.store.Repository().NewLot(newLotEvent); err != nil {
 					return err
 				}
 				log.Println("event: new lot ", newLotEvent)
@@ -138,12 +150,18 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
+				if err := p.store.Repository().BuyLot(buyLotEvent); err != nil {
+					return err
+				}
 				log.Println("event: buy lot ", buyLotEvent)
 
 			case model.SendLotEventHash:
 				sendLotEvent := &model.SendLotEvent{}
 				err := groupAbi.UnpackIntoInterface(sendLotEvent, "SendLotEvent", logEvent.Data)
 				if err != nil {
+					return err
+				}
+				if err := p.store.Repository().SendLot(sendLotEvent); err != nil {
 					return err
 				}
 				log.Println("event: send lot ", sendLotEvent)
@@ -154,12 +172,18 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
+				if err := p.store.Repository().UpdatePlayer(updateParamsEvent); err != nil {
+					return err
+				}
 				log.Println("event: update params ", updateParamsEvent)
 
 			case model.ReceiveLotEventHash:
 				receiveLotEvent := &model.ReceiveLotEvent{}
 				err := groupAbi.UnpackIntoInterface(receiveLotEvent, "ReceiveLotEvent", logEvent.Data)
 				if err != nil {
+					return err
+				}
+				if err := p.store.Repository().ReceiveLot(receiveLotEvent); err != nil {
 					return err
 				}
 				log.Println("event: receive lot ", receiveLotEvent)

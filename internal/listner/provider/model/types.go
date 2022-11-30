@@ -1,17 +1,18 @@
 package model
 
 import (
+	"encoding/base64"
 	"math/big"
 )
 
 type Round struct {
-	Address      string   `json:"address"`
-	Deposit      int      `json:"deposit"`
-	BalancesSnap *big.Int `json:"bsnap"`
-	ParamsSnap   *big.Int `json:"psnap"`
-	Spos         *big.Int `json:"Spos"`
-	Sneg         *big.Int `json:"Sneg"`
-	Reserve      *big.Int `json:"reserve"`
+	Address      string `json:"address"`
+	Deposit      string `json:"deposit"`
+	BalancesSnap string `json:"bsnap"`
+	ParamsSnap   string `json:"psnap"`
+	Spos         string `json:"Spos"`
+	Sneg         string `json:"Sneg"`
+	Reserve      string `json:"reserve"`
 }
 
 type PendingPlayer struct {
@@ -22,21 +23,31 @@ type PendingPlayer struct {
 type Player struct {
 	Address      string `json:"address"`
 	RoundAddress string `json:"roundAddress"`
-	Balance      int    `json:"balance"`
-	Nwin         int    `json:"nwin"`
-	N            int    `json:"n"`
-	Spos         int    `json:"spos"`
-	Sneg         int    `json:"sneg"`
+	Balance      string `json:"balance"`
+	Nwin         int64  `json:"nwin"`
+	N            int64  `json:"n"`
+	Spos         string `json:"spos"`
+	Sneg         string `json:"sneg"`
 }
 
 type Lot struct {
 	Address       string `json:"address"`
 	RoundAddress  string `json:"roundAddress"`
-	TimeFirst     int    `json:"timeF"`
-	TimeSecond    int    `json:"timeS"`
-	Value         int    `json:"value"`
-	Price         int    `json:"price"`
+	TimeFirst     string `json:"timeF"`
+	TimeSecond    string `json:"timeS"`
+	Value         string `json:"value"`
+	Price         int64  `json:"price"`
 	Owner         string `json:"owner"`
-	ReceiveTokens int    `json:"receiveTokens"`
-	Snapshot      int    `json:"snapshot"`
+	ReceiveTokens string `json:"receiveTokens"`
+	Snapshot      string `json:"snapshot"`
+}
+
+func Base64ToInt(s string) (*big.Int, error) {
+	data, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+	i := new(big.Int)
+	i.SetBytes(data)
+	return i, nil
 }

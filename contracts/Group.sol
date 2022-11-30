@@ -19,6 +19,7 @@ contract Group {
     event NewLotEvent(
          address _roundAddress,
          address _lotAddr,
+         address _owner,
          uint256 _timeFirst,
          uint256 _timeSecond,
          uint256 _price,
@@ -62,15 +63,15 @@ contract Group {
         uint _bsnap
     );
 
-
-
-    event Price1(uint _amountOut);
-    event Price2(uint _amountOut);
+    event WithdrawEvent(
+        address _sender,
+        uint _psnap,
+        uint _bsnap
+    );
 
 
     address owner;
     address roundAddr;
-    address exchangeAddress;
 
     constructor() {
         owner = msg.sender;
@@ -116,25 +117,24 @@ contract Group {
 
     function NewLot(
         address _lotAddr,
-        uint256 _timeFirst,
-        uint256 _timeSecond,
-        uint256 _price,
-        uint256 _val,
-        uint _Hres,
-        uint _balance
+        bytes memory initParamsData,
+        bytes memory proofResData
     ) external {
-        Proof.ProofRes memory proof = Proof.NewProof(msg.sender, _price, _Hres, _balance);
+        Proof.ProofRes memory proof = Proof.DecodeProofResNewLot(proofResData);
+        proof.owner = msg.sender;
+        Params.InitParams memory initParams = Params.DecodeInitParams(initParamsData);
         IRound round = IRound(roundAddr);
         uint lotSnap;
         uint balancesSnap;
-        (lotSnap, balancesSnap) = round.NewLot(_lotAddr, _timeFirst, _timeSecond, _val, proof);
+        (lotSnap, balancesSnap) = round.NewLot(_lotAddr, initParams, proof);
          emit NewLotEvent(
              roundAddr,
              _lotAddr,
-             _timeFirst,
-             _timeSecond,
-             _price,
-             _val,
+             msg.sender,
+             initParams.timeFirst,
+             initParams.timeSecond,
+             proof.price,
+             initParams.value,
              lotSnap,
              balancesSnap
      );
@@ -142,20 +142,12 @@ contract Group {
 
     function BuyLot(
         address _lotAddr,
-        uint256 _price,
-        uint _Hres,
-        uint _Hd,
-        uint256 _balance,
-        uint256 _prevBalance,
-        address _prevOwner,
-        uint256 _prevPrice,
-        uint256 _prevSnap
+        bytes memory proofResData,
+        bytes memory proofEPData 
         ) external {
-        Proof.ProofRes memory proofRes = Proof.NewProof(msg.sender, _price, _Hres, _balance);
-        proofRes.prevOwner = _prevOwner;
-        proofRes.prevBalance = _prevBalance;
-        proofRes.Hd = _Hd;
-        Proof.ProofEnoungPrice memory proofEP = Proof.NewProofEnoughPrice(_prevOwner, _prevPrice, _prevSnap);
+        Proof.ProofRes memory proofRes = Proof.DecodeProofResBuyLot(proofResData);
+        proofRes.owner = msg.sender;
+        Proof.ProofEnoungPrice memory proofEP = Proof.DecodeProofEP(proofEPData);
         IRound round = IRound(roundAddr);
         uint lotSnap;
         uint balancesSnap;
@@ -164,7 +156,7 @@ contract Group {
             roundAddr,
             _lotAddr,
             msg.sender,
-            _price,
+            proofRes.price,
             lotSnap,
             balancesSnap
         );
@@ -217,72 +209,16 @@ contract Group {
     }
 
 
-    function GetSnap() public view returns (uint256) {
-        IRound round = IRound(roundAddr);
-        return round.GetSnap();
-    }
-
-    function GetRound() public view returns(address){
-        return roundAddr;
-    }
-
-    function GetSnapRound() public view returns(uint256){
-        IRound round = IRound(roundAddr);
-        return round.GetSnapshot();
-    }
-
-    function GetInitSnapRound() public view returns(uint256){
-        IRound round = IRound(roundAddr);
-        return round.GetInitSnap();
-    }
-
-    function VerifyProofRes(
-        address _addr,
-        uint _H,
-        uint _balance
-    ) public view returns(bool){
-        Proof.ProofRes memory proofRes = Proof.NewProof(_addr, 0, _H, _balance);
-        IRound round = IRound(roundAddr);
-        return round.VerifyProofRes(proofRes);
-    }
-
-    function VerifyParamsPlayer(
+    function Withdraw(
+        bytes memory proofResData,
         bytes memory playerParamsData
-    ) external view returns(bool){
+    ) external {
+        Proof.ProofRes memory proof = Proof.DecodeProofRes(proofResData);
+        proof.owner = msg.sender;
         Params.PlayerParams memory params = Params.DecodePlayerParams(playerParamsData);
         IRound round = IRound(roundAddr);
-        return round.VerifyParamsPlayer(params);
+        (uint psnap, uint bsnap) = round.Withdraw(params, proof);
+        emit WithdrawEvent(msg.sender, psnap, bsnap);
     }
 
-    function GetParamsSnapshot() external view returns(uint){
-        IRound round = IRound(roundAddr);
-        return round.GetParamsSnap();
-    }
-
-    function GetDepositRound() external view returns(uint, uint){
-        IRound round = IRound(roundAddr);
-        return round.GetDeposit();
-    }
-
-    function SwapEthToDai(uint amountIn) external{
-        IRound round = IRound(roundAddr);
-        round.Swap1(amountIn);
-    }
-
-    function SwapDaiToEth(uint amountIn) external{
-        IRound round = IRound(roundAddr);
-        round.Swap2(amountIn);
-    }
-
-    function CurrentPrice1(uint _amountIn) external{
-        IRound round = IRound(roundAddr);
-        uint price =  round.GetPrice1(_amountIn);
-        emit Price1(price);
-    }
-
-    function CurrentPrice2(uint _amountIn) external{
-        IRound round = IRound(roundAddr);
-        uint price =  round.GetPrice2(_amountIn);
-        emit Price2(price);
-    }
 }  

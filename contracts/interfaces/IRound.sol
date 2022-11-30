@@ -14,9 +14,7 @@ interface IRound {
 
     function NewLot(
         address _lotAddr,
-        uint256 _timeFirst,
-        uint256 _timeSecond,
-        uint256 _val,
+        Params.InitParams memory initParams,
         Proof.ProofRes memory proof
     ) external returns(uint, uint);
 
@@ -43,7 +41,10 @@ interface IRound {
         Params.PlayerParams calldata _params
     ) external returns(bytes memory, uint);
 
-
+    function Withdraw(
+        Params.PlayerParams calldata _params,
+        Proof.ProofRes calldata _proof
+        ) external returns(uint, uint);
 
     function GetSnap() external view returns (uint256);
 
@@ -53,26 +54,10 @@ interface IRound {
 
     function GetInitSnap() external view returns(uint256);
 
-    function GetExchange() external view returns(address);
-
-    function VerifyProofRes(
-        Proof.ProofRes calldata proof
-    ) external view returns(bool);
-
-    function VerifyParamsPlayer(
-        Params.PlayerParams calldata _params
-    ) external view returns(bool);
-
     function GetParamsSnap() external view returns(uint);
 
     function GetBalancesSnap() external view returns(uint);
 
-    function GetDeposit() external view returns(uint, uint);
 
-    function Swap1(uint amountIn) external;
 
-    function Swap2(uint amountIn) external;
-
-    function GetPrice1(uint _amountIn) external returns(uint);
-    function GetPrice2(uint _amountIn) external returns(uint);
 }

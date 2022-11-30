@@ -6,7 +6,6 @@ import "./libraries/Params.sol";
 
 
 
-
 contract Lot {
     address roundAddr;
 
@@ -73,7 +72,7 @@ contract Lot {
         address sender, 
         uint256 newPrice,
         Proof.ProofEnoungPrice calldata proof
-        ) external onlyRound returns(uint){
+        ) external onlyRound correctPrice(proof, newPrice) returns(uint){
         require(state == uint256(keccak256(abi.encode("empty"))), "not empty");
         snapshot = uint256(
             keccak256(
@@ -113,7 +112,7 @@ contract Lot {
     function Close(
         Params.InitParams calldata init,
         Proof.ProofRes calldata proof
-    ) public onlyRound{
+    ) public onlyRound proofInit(init) proofOwner(proof){
         require(state == uint256(keccak256(abi.encode("wait"))), "not wait");
         require(block.timestamp>0, "Not correct time");
         state = uint256(keccak256(abi.encode("closed")));
@@ -156,9 +155,6 @@ contract Lot {
         return initBalance;
     }
 
-     function GetSnap() external view returns (uint256) {
-        return snapshot;
-    }
 
 
     
