@@ -17,8 +17,8 @@ CREATE TABLE `Players` (
 	`address` varchar(255) NOT NULL,
 	`roundAddress` varchar(255) NOT NULL,
 	`balance` INT(255),
-	`nwin` INT(255),
-	`n` INT(255),
+	`nwin` INT(255) DEFAULT 0,
+	`n` INT(255) DEFAULT 0,
 	`spos` VARCHAR(255) DEFAULT '',
 	`sneg` VARCHAR(255) DEFAULT ''
 );

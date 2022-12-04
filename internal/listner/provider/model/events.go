@@ -13,23 +13,23 @@ type CreateRoundEvent struct {
 }
 
 type EnterRoundEvent struct {
-	RoundAddr common.Address `abi:"_roundAdd"`
+	RoundAddr common.Address `abi:"_roundAddress"`
 	Sender    common.Address `abi:"_sender"`
 }
 
 type StartRoundEvent struct {
-	RoundAddr    common.Address `abi:"_roundAdd"`
+	RoundAddr    common.Address `abi:"_roundAddress"`
 	BalancesSnap *big.Int       `abi:"_bsnap"`
 	ParamsSnap   *big.Int       `abi:"_psnap"`
 }
 
 type CreatedLotEvent struct {
-	RoundAddr common.Address `abi:"_roundAdd"`
+	RoundAddr common.Address `abi:"_roundAddress"`
 	LotAddr   common.Address `abi:"_lotAddr"`
 }
 
 type NewLotEvent struct {
-	RoundAddr    common.Address `abi:"_roundAdd"`
+	RoundAddr    common.Address `abi:"_roundAddress"`
 	LotAddr      common.Address `abi:"_lotAddr"`
 	Owner        common.Address `abi:"_owner"`
 	TimeFirst    *big.Int       `abi:"_timeFirst"`
@@ -41,7 +41,7 @@ type NewLotEvent struct {
 }
 
 type BuyLotEvent struct {
-	RoundAddr    common.Address `abi:"_roundAdd"`
+	RoundAddr    common.Address `abi:"_roundAddress"`
 	LotAddr      common.Address `abi:"_lotAddr"`
 	Sender       common.Address `abi:"_sender"`
 	Price        *big.Int       `abi:"_price"`
@@ -50,13 +50,13 @@ type BuyLotEvent struct {
 }
 
 type SendLotEvent struct {
-	RoundAddr     common.Address `abi:"_roundAdd"`
+	RoundAddr     common.Address `abi:"_roundAddress"`
 	LotAddr       common.Address `abi:"_lotAddr"`
 	ReceiveTokens *big.Int       `abi:"_receiveTokens"`
 }
 
 type UpdatePlayerParams struct {
-	RoundAddr common.Address `abi:"_roundAdd"`
+	RoundAddr common.Address `abi:"_roundAddress"`
 	Owner     common.Address `abi:"_owner"`
 	Nwin      *big.Int       `abi:"_nwin"`
 	N         *big.Int       `abi:"_n"`
@@ -65,16 +65,18 @@ type UpdatePlayerParams struct {
 }
 
 type ReceiveLotEvent struct {
-	RoundAddr    common.Address `abi:"_roundAdd"`
+	RoundAddr    common.Address `abi:"_roundAddress"`
 	LotAddr      common.Address `abi:"_lotAddr"`
 	Owner        common.Address `abi:"_owner"`
 	Balance      *big.Int       `abi:"_balance"`
+	SposDelta    *big.Int       `abi:"_SposDelta"`
+	SnegDelta    *big.Int       `abi:"_SnegDelta"`
 	ParamsSnap   *big.Int       `abi:"_psnap"`
 	BalancesSnap *big.Int       `abi:"_bsnap"`
 }
 
 var (
-	CreateRoundEventHash = crypto.Keccak256Hash([]byte("CreateRoundEvent(address,address)")).Hex()
+	CreateRoundEventHash = crypto.Keccak256Hash([]byte("CreateRoundEvent(address,uint256)")).Hex()
 
 	EnterRoundEventHash = crypto.Keccak256Hash([]byte("EnterRoundEvent(address,address)")).Hex()
 
@@ -82,7 +84,7 @@ var (
 
 	CreatedLotEventHash = crypto.Keccak256Hash([]byte("CreatedLotEvent(address,address)")).Hex()
 
-	NewLotEventHash = crypto.Keccak256Hash([]byte("NewLotEvent(address,address,uint256,uint256,uint256,uint256,uint256,uint256)")).Hex()
+	NewLotEventHash = crypto.Keccak256Hash([]byte("NewLotEvent(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256)")).Hex()
 
 	BuyLotEventHash = crypto.Keccak256Hash([]byte("BuyLotEvent(address,address,address,uint256,uint256,uint256)")).Hex()
 
@@ -90,5 +92,5 @@ var (
 
 	UpdatePlayerParamsHash = crypto.Keccak256Hash([]byte("UpdatePlayerParams(address,address,uint256,uint256,uint256,uint256)")).Hex()
 
-	ReceiveLotEventHash = crypto.Keccak256Hash([]byte("ReceiveLotEvent(address,address,address,uint256,uint256,uint256)")).Hex()
+	ReceiveLotEventHash = crypto.Keccak256Hash([]byte("ReceiveLotEvent(address,address,address,uint256,uint256,uint256,uint256,uint256)")).Hex()
 )

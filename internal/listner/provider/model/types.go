@@ -33,8 +33,8 @@ type Player struct {
 type Lot struct {
 	Address       string `json:"address"`
 	RoundAddress  string `json:"roundAddress"`
-	TimeFirst     string `json:"timeF"`
-	TimeSecond    string `json:"timeS"`
+	TimeFirst     string `json:"timeFirst"`
+	TimeSecond    string `json:"timeSecond"`
 	Value         string `json:"value"`
 	Price         int64  `json:"price"`
 	Owner         string `json:"owner"`

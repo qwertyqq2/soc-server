@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/qwertyqq2/soc-server/apigroup"
+	"github.com/qwertyqq2/soc-server/internal/configs"
 	"github.com/qwertyqq2/soc-server/internal/listner/provider/model"
 	"github.com/qwertyqq2/soc-server/internal/listner/provider/store"
 )
@@ -40,8 +41,7 @@ func NewDB(dbURL string) (*sql.DB, error) {
 }
 
 func (p *Provider) SetUp() error {
-	conf := GetConfig()
-
+	conf := configs.GetConfig()
 	db, err := NewDB(conf.DB.DbUrl)
 	if err != nil {
 		return err
@@ -69,6 +69,9 @@ func (p *Provider) SetUp() error {
 
 func (p *Provider) ListenEvent() error {
 	defer p.store.Close()
+	if err := p.store.Repository().Clear(); err != nil {
+		log.Fatal(err)
+	}
 	groupAbi, err := abi.JSON(strings.NewReader(string(apigroup.ApigroupABI)))
 	if err != nil {
 		return err
@@ -99,6 +102,7 @@ func (p *Provider) ListenEvent() error {
 				if err := p.store.Repository().CreateRound(createRoundEvent); err != nil {
 					return err
 				}
+				log.Println("event-create round: ", createRoundEvent)
 
 			case model.EnterRoundEventHash:
 				enterRoundEvent := &model.EnterRoundEvent{}
@@ -142,7 +146,7 @@ func (p *Provider) ListenEvent() error {
 				if err := p.store.Repository().NewLot(newLotEvent); err != nil {
 					return err
 				}
-				log.Println("event: new lot ", newLotEvent)
+				log.Println("event-new lot ", newLotEvent)
 
 			case model.BuyLotEventHash:
 				buyLotEvent := &model.BuyLotEvent{}
@@ -153,7 +157,7 @@ func (p *Provider) ListenEvent() error {
 				if err := p.store.Repository().BuyLot(buyLotEvent); err != nil {
 					return err
 				}
-				log.Println("event: buy lot ", buyLotEvent)
+				log.Println("event-buy lot ", buyLotEvent)
 
 			case model.SendLotEventHash:
 				sendLotEvent := &model.SendLotEvent{}
@@ -164,7 +168,7 @@ func (p *Provider) ListenEvent() error {
 				if err := p.store.Repository().SendLot(sendLotEvent); err != nil {
 					return err
 				}
-				log.Println("event: send lot ", sendLotEvent)
+				log.Println("event-send lot ", sendLotEvent)
 
 			case model.UpdatePlayerParamsHash:
 				updateParamsEvent := &model.UpdatePlayerParams{}
@@ -175,7 +179,7 @@ func (p *Provider) ListenEvent() error {
 				if err := p.store.Repository().UpdatePlayer(updateParamsEvent); err != nil {
 					return err
 				}
-				log.Println("event: update params ", updateParamsEvent)
+				log.Println("event-update params ", updateParamsEvent)
 
 			case model.ReceiveLotEventHash:
 				receiveLotEvent := &model.ReceiveLotEvent{}
@@ -186,7 +190,7 @@ func (p *Provider) ListenEvent() error {
 				if err := p.store.Repository().ReceiveLot(receiveLotEvent); err != nil {
 					return err
 				}
-				log.Println("event: receive lot ", receiveLotEvent)
+				log.Println("event-receive lot ", receiveLotEvent)
 			}
 
 		}

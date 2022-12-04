@@ -59,6 +59,8 @@ contract Group {
         address _lotAddr,
         address _owner,
         uint _balance,
+        uint _SposDelta,
+        uint _SnegDelta,
         uint _psnap,
         uint _bsnap
     );
@@ -203,6 +205,8 @@ contract Group {
             _lotAddr,
             _owner,
             newBalance,
+            NewParams.spos - params.spos,
+            NewParams.sneg - params.sneg,
             psnap,
             bsnap
         );
@@ -220,5 +224,4 @@ contract Group {
         (uint psnap, uint bsnap) = round.Withdraw(params, proof);
         emit WithdrawEvent(msg.sender, psnap, bsnap);
     }
-
 }  
