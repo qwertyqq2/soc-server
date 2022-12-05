@@ -356,3 +356,76 @@ func (r *Repository) Clear() error {
 	_, err = r.store.db.Exec(query)
 	return err
 }
+
+func (r *Repository) AllPlayers() ([]*model.Player, error) {
+	query := fmt.Sprintf("SELECT * FROM Players;")
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	players := make([]*model.Player, 0)
+	for rows.Next() {
+		player := &model.Player{}
+		err := rows.Scan(&player.Address, &player.RoundAddress, &player.Balance, &player.Nwin,
+			&player.N, &player.Spos, &player.Sneg)
+		if err != nil {
+			return nil, err
+		}
+		players = append(players, player)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return players, nil
+}
+
+func (r *Repository) AllRounds() ([]*model.Round, error) {
+	query := fmt.Sprintf("SELECT * FROM Rounds;")
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	rounds := make([]*model.Round, 0)
+	for rows.Next() {
+		round := &model.Round{}
+		err := rows.Scan(&round.Address, &round.Deposit,
+			&round.BalancesSnap, &round.ParamsSnap, &round.Spos, &round.Sneg, &round.Reserve)
+		if err != nil {
+			return nil, err
+		}
+		rounds = append(rounds, round)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return rounds, nil
+}
+
+func (r *Repository) AllLots() ([]*model.Lot, error) {
+	query := fmt.Sprintf("SELECT * FROM Lots;")
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	lots := make([]*model.Lot, 0)
+	for rows.Next() {
+		lot := &model.Lot{}
+		err := rows.Scan(&lot.Address, &lot.RoundAddress,
+			&lot.TimeFirst, &lot.TimeSecond, &lot.Value, &lot.Price,
+			&lot.Owner, &lot.ReceiveTokens, &lot.Snapshot)
+		if err != nil {
+			return nil, err
+		}
+		lots = append(lots, lot)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return lots, nil
+}

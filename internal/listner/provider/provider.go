@@ -24,7 +24,7 @@ type Provider struct {
 	client          *ethclient.Client
 	contractAddress common.Address
 	api             *apigroup.Apigroup
-	store           *store.Store
+	Store           *store.Store
 }
 
 func NewDB(dbURL string) (*sql.DB, error) {
@@ -47,7 +47,7 @@ func (p *Provider) SetUp() error {
 		return err
 	}
 
-	p.store = store.New(db)
+	p.Store = store.New(db)
 
 	pClient, err := ethclient.Dial(conf.ParamsProvider.ProviderURL)
 	if err != nil {
@@ -68,8 +68,8 @@ func (p *Provider) SetUp() error {
 }
 
 func (p *Provider) ListenEvent() error {
-	defer p.store.Close()
-	if err := p.store.Repository().Clear(); err != nil {
+	defer p.Store.Close()
+	if err := p.Store.Repository().Clear(); err != nil {
 		log.Fatal(err)
 	}
 	groupAbi, err := abi.JSON(strings.NewReader(string(apigroup.ApigroupABI)))
@@ -99,7 +99,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().CreateRound(createRoundEvent); err != nil {
+				if err := p.Store.Repository().CreateRound(createRoundEvent); err != nil {
 					return err
 				}
 				log.Println("event-create round: ", createRoundEvent)
@@ -110,7 +110,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().EnterRound(enterRoundEvent); err != nil {
+				if err := p.Store.Repository().EnterRound(enterRoundEvent); err != nil {
 					return err
 				}
 				log.Println("event-enter round: ", enterRoundEvent)
@@ -121,7 +121,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().StartRound(startRoundEvent); err != nil {
+				if err := p.Store.Repository().StartRound(startRoundEvent); err != nil {
 					return err
 				}
 				log.Println("event-start round: ", startRoundEvent)
@@ -132,7 +132,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().CreateLot(createLotEvent); err != nil {
+				if err := p.Store.Repository().CreateLot(createLotEvent); err != nil {
 					return err
 				}
 				log.Println("event-create lot: ", createLotEvent)
@@ -143,7 +143,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().NewLot(newLotEvent); err != nil {
+				if err := p.Store.Repository().NewLot(newLotEvent); err != nil {
 					return err
 				}
 				log.Println("event-new lot ", newLotEvent)
@@ -154,7 +154,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().BuyLot(buyLotEvent); err != nil {
+				if err := p.Store.Repository().BuyLot(buyLotEvent); err != nil {
 					return err
 				}
 				log.Println("event-buy lot ", buyLotEvent)
@@ -165,7 +165,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().SendLot(sendLotEvent); err != nil {
+				if err := p.Store.Repository().SendLot(sendLotEvent); err != nil {
 					return err
 				}
 				log.Println("event-send lot ", sendLotEvent)
@@ -176,7 +176,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().UpdatePlayer(updateParamsEvent); err != nil {
+				if err := p.Store.Repository().UpdatePlayer(updateParamsEvent); err != nil {
 					return err
 				}
 				log.Println("event-update params ", updateParamsEvent)
@@ -187,7 +187,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.store.Repository().ReceiveLot(receiveLotEvent); err != nil {
+				if err := p.Store.Repository().ReceiveLot(receiveLotEvent); err != nil {
 					return err
 				}
 				log.Println("event-receive lot ", receiveLotEvent)

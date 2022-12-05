@@ -5,22 +5,25 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/qwertyqq2/soc-server/internal/app/hadlers"
+	"github.com/qwertyqq2/soc-server/internal/listner/provider"
 )
 
 type Server struct {
-	router *httprouter.Router
+	router   *httprouter.Router
+	provider *provider.Provider
 }
 
-func NewServer(r *httprouter.Router) *Server {
+func NewServer(r *httprouter.Router, p *provider.Provider) *Server {
 	s := &Server{
-		router: httprouter.New(),
+		router:   httprouter.New(),
+		provider: p,
 	}
-	s.conifigureServer()
+	s.conifigureServer(p)
 	return s
 }
 
-func (s *Server) conifigureServer() {
-	h := hadlers.NewHander()
+func (s *Server) conifigureServer(p *provider.Provider) {
+	h := hadlers.NewHander(p)
 	h.Register(s.router)
 }
 

@@ -2,7 +2,6 @@ package configs
 
 import (
 	"log"
-	"sync"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -19,18 +18,13 @@ type Config struct {
 		Type   string `yaml:"type"`
 		BindIp string `yaml:"bind_ip"`
 		Port   string `yaml:"port"`
-	}
+	} `yaml:"server"`
 }
-
-var once sync.Once
 
 func GetConfig() *Config {
 	conf := &Config{}
-	once.Do(func() {
-		if err := cleanenv.ReadConfig("config.yaml", conf); err != nil {
-			log.Fatal(err)
-		}
-	})
-	log.Println(conf.ParamsProvider)
+	if err := cleanenv.ReadConfig("configs.yaml", conf); err != nil {
+		log.Fatal(err)
+	}
 	return conf
 }
