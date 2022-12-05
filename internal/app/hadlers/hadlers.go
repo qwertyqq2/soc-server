@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
@@ -66,6 +67,7 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 				if err != nil {
 					log.Fatal(err)
 				}
+				time.Sleep(1 * time.Second)
 			}
 			players, err := h.provider.Store.Repository().AllPlayers()
 			if err != nil {
@@ -84,6 +86,7 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 				if err != nil {
 					log.Fatal(err)
 				}
+				time.Sleep(3 * time.Millisecond)
 			}
 			lots, err := h.provider.Store.Repository().AllLots()
 			if err != nil {
@@ -102,6 +105,20 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 				if err != nil {
 					log.Fatal(err)
 				}
+				time.Sleep(1 * time.Second)
+
+			}
+			msg := Message{
+				Type: 100,
+				Data: nil,
+			}
+			jall, err := json.Marshal(msg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = conn.WriteMessage(websocket.TextMessage, jall)
+			if err != nil {
+				log.Fatal(err)
 			}
 			flag = true
 		} else {
