@@ -69,9 +69,9 @@ func (p *Provider) SetUp() error {
 
 func (p *Provider) ListenEvent() error {
 	defer p.Store.Close()
-	if err := p.Store.Repository().Clear(); err != nil {
-		log.Fatal(err)
-	}
+	// if err := p.Store.Repository().Clear(); err != nil {
+	// 	return err
+	// }
 	groupAbi, err := abi.JSON(strings.NewReader(string(apigroup.ApigroupABI)))
 	if err != nil {
 		return err
@@ -85,6 +85,8 @@ func (p *Provider) ListenEvent() error {
 	if err != nil {
 		return err
 	}
+
+	log.Println("Listen: contract")
 	for {
 		select {
 		case <-ctx.Done():
@@ -92,6 +94,7 @@ func (p *Provider) ListenEvent() error {
 		case err := <-sub.Err():
 			return err
 		case logEvent := <-eventCh:
+			log.Println("Event received")
 			switch logEvent.Topics[0].Hex() {
 			case model.CreateRoundEventHash:
 				createRoundEvent := &model.CreateRoundEvent{}
@@ -191,8 +194,15 @@ func (p *Provider) ListenEvent() error {
 					return err
 				}
 				log.Println("event-receive lot ", receiveLotEvent)
-			}
 
+			case model.PickEventHash:
+				pickEvent := &model.PickEvent{}
+				err := groupAbi.UnpackIntoInterface(pickEvent, "PickEvent", logEvent.Data)
+				if err != nil {
+					return err
+				}
+				log.Println("event-pick!")
+			}
 		}
 	}
 }

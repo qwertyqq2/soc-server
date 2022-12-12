@@ -1,6 +1,6 @@
 params_listner:
   provider_url: wss://polygon-mumbai.g.alchemy.com/v2/m1ervz2Dh8jIqYNOqMU39EiaD_n_Q7uo
-  group_address: 0x104B8c0E5AA2514e8D13C8f94A2D82Fe25664523
+  group_address: 0xd08124f0713032601ac661Fc9944988bf4d6c083
 db:
   db_url: root:aaa@tcp(127.0.0.1:3306)/SOCDB
 server:

@@ -319,13 +319,11 @@ func (r *Repository) ReceiveLot(e *model.ReceiveLotEvent) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(Spos.String())
 
 	newSpos := big.NewInt(0)
 	newSneg := big.NewInt(0)
 	newSpos.Add(Spos, e.SposDelta)
 	newSneg.Add(Sneg, e.SnegDelta)
-	fmt.Println(newSpos.String())
 	query = fmt.Sprintf("UPDATE Rounds SET bsnap='%s', psnap='%s', Spos='%s', Sneg='%s' WHERE address='%s';",
 		e.BalancesSnap.String(),
 		e.ParamsSnap.String(),
@@ -416,8 +414,8 @@ func (r *Repository) AllLots() ([]*model.Lot, error) {
 	for rows.Next() {
 		lot := &model.Lot{}
 		err := rows.Scan(&lot.Address, &lot.RoundAddress,
-			&lot.TimeFirst, &lot.TimeSecond, &lot.Value, &lot.Price,
-			&lot.Owner, &lot.ReceiveTokens, &lot.Snapshot)
+			&lot.Owner, &lot.TimeFirst, &lot.TimeSecond, &lot.Value,
+			&lot.Price, &lot.ReceiveTokens, &lot.Snapshot)
 		if err != nil {
 			return nil, err
 		}

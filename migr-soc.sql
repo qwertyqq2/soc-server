@@ -16,7 +16,7 @@ CREATE TABLE `PendingPlayers` (
 CREATE TABLE `Players` (
 	`address` varchar(255) NOT NULL,
 	`roundAddress` varchar(255) NOT NULL,
-	`balance` INT(255),
+	`balance` INT(255) DEFAULT 0,
 	`nwin` INT(255) DEFAULT 0,
 	`n` INT(255) DEFAULT 0,
 	`spos` VARCHAR(255) DEFAULT '',
@@ -26,11 +26,11 @@ CREATE TABLE `Players` (
 CREATE TABLE `Lots` (
 	`address` varchar(255) NOT NULL,
 	`roundAddress` varchar(255) NOT NULL,
-	`owner` varchar(255),
-	`timeFirst` VARCHAR(255),
-	`timeSecond` VARCHAR(255),
+	`owner` varchar(255) DEFAULT '',
+	`timeFirst` VARCHAR(255) DEFAULT '',
+	`timeSecond` VARCHAR(255) DEFAULT '',
 	`value` VARCHAR(255) DEFAULT '',
-	`price` INT(255),
+	`price` INT(255) DEFAULT 0,
 	`receiveTokens` VARCHAR(255) DEFAULT '',
 	`snapshot` VARCHAR(255) DEFAULT ''
 );

@@ -15,5 +15,8 @@ func Start(conf *configs.Config, p *provider.Provider) error {
 	srv := NewServer(router, p)
 
 	log.Println("Listen: ", conf.Server.BindIp+":"+conf.Server.Port)
+
+	go p.ListenEvent()
+
 	return http.ListenAndServe(conf.Server.BindIp+":"+conf.Server.Port, srv)
 }

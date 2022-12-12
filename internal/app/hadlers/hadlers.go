@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
@@ -15,13 +14,25 @@ const (
 	LoadURL = "/connect"
 )
 
+type HandlerStorage struct {
+	clients map[string]bool
+}
+
+func NewHandlerStorage() *HandlerStorage {
+	return &HandlerStorage{
+		clients: make(map[string]bool),
+	}
+}
+
 type handler struct {
 	provider *provider.Provider
+	storage  HandlerStorage
 }
 
 func NewHander(p *provider.Provider) *handler {
 	return &handler{
 		provider: p,
+		storage:  *NewHandlerStorage(),
 	}
 }
 
@@ -42,6 +53,10 @@ type Message struct {
 
 func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	conn, err := upgrader.Upgrade(w, r, nil)
+	senderAddr := r.URL.Query()["addr"][0]
+	h.storage.clients[senderAddr] = true
+	log.Printf("connected '%s'", senderAddr)
+	defer delete(h.storage.clients, senderAddr)
 	if err != nil {
 		log.Println("upgrade:", err)
 		return
@@ -67,7 +82,6 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 				if err != nil {
 					log.Fatal(err)
 				}
-				time.Sleep(1 * time.Second)
 			}
 			players, err := h.provider.Store.Repository().AllPlayers()
 			if err != nil {
@@ -86,7 +100,6 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 				if err != nil {
 					log.Fatal(err)
 				}
-				time.Sleep(3 * time.Millisecond)
 			}
 			lots, err := h.provider.Store.Repository().AllLots()
 			if err != nil {
@@ -105,7 +118,6 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 				if err != nil {
 					log.Fatal(err)
 				}
-				time.Sleep(1 * time.Second)
 
 			}
 			msg := Message{
