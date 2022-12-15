@@ -32,7 +32,8 @@ CREATE TABLE `Lots` (
 	`value` VARCHAR(255) DEFAULT '',
 	`price` INT(255) DEFAULT 0,
 	`receiveTokens` VARCHAR(255) DEFAULT '',
-	`snapshot` VARCHAR(255) DEFAULT ''
+	`snapshot` VARCHAR(255) DEFAULT '',
+	`prevSnapshot` VARCHAR(255) DEFAULT ''
 );
 
 ALTER TABLE `PendingPlayers` ADD CONSTRAINT `PendingPlayers_fk0` FOREIGN KEY (`roundAddress`) REFERENCES `Rounds`(`address`);

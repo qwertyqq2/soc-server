@@ -40,6 +40,7 @@ type Lot struct {
 	Owner         string `json:"owner"`
 	ReceiveTokens string `json:"receiveTokens"`
 	Snapshot      string `json:"snapshot"`
+	PrevSnapshot  string `json:"prevSnapshot"`
 }
 
 func Base64ToInt(s string) (*big.Int, error) {

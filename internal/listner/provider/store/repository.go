@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/qwertyqq2/soc-server/internal/listner/provider/model"
 )
 
@@ -166,24 +167,128 @@ func (r *Repository) FindPlayerBalance(playerAddr string) (*big.Int, error) {
 	return balance, nil
 }
 
+func (r *Repository) FindLotSnap(lotAddr common.Address) (*big.Int, error) {
+	query := fmt.Sprintf("SELECT * FROM Lots WHERE address='%s';", lotAddr.Hex())
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	lot := &model.Lot{}
+	for rows.Next() {
+		err := rows.Scan(&lot.Address, &lot.RoundAddress,
+			&lot.Owner, &lot.TimeFirst, &lot.TimeSecond, &lot.Value,
+			&lot.Price, &lot.ReceiveTokens, &lot.Snapshot, &lot.PrevSnapshot)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	snap := new(big.Int)
+	snap.SetString(lot.Snapshot, 10)
+	return snap, nil
+}
+
+func (r *Repository) FindLotOwner(lotAddr common.Address) (*common.Address, error) {
+	query := fmt.Sprintf("SELECT * FROM Lots WHERE address='%s';", lotAddr.Hex())
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	lot := &model.Lot{}
+	for rows.Next() {
+		err := rows.Scan(&lot.Address, &lot.RoundAddress,
+			&lot.Owner, &lot.TimeFirst, &lot.TimeSecond, &lot.Value,
+			&lot.Price, &lot.ReceiveTokens, &lot.Snapshot, &lot.PrevSnapshot)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	owner := common.HexToAddress(lot.Owner)
+	return &owner, nil
+}
+
+func (r *Repository) FindLotFromAddress(lotAddr common.Address) (*model.Lot, error) {
+	query := fmt.Sprintf("SELECT * FROM Lots WHERE address='%s';", lotAddr.Hex())
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	lot := &model.Lot{}
+	for rows.Next() {
+		err := rows.Scan(&lot.Address, &lot.RoundAddress,
+			&lot.Owner, &lot.TimeFirst, &lot.TimeSecond, &lot.Value,
+			&lot.Price, &lot.ReceiveTokens, &lot.Snapshot, &lot.PrevSnapshot)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return lot, nil
+}
+
+func (r *Repository) FindPlayerFromAddress(playerAddr common.Address) (*model.Player, error) {
+	query := fmt.Sprintf("SELECT * FROM Players WHERE address='%s';", playerAddr.Hex())
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	player := &model.Player{}
+	for rows.Next() {
+		err := rows.Scan(&player.Address, &player.RoundAddress, &player.Balance, &player.Nwin,
+			&player.N, &player.Spos, &player.Sneg)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return player, nil
+}
+
 func (r *Repository) NewLot(e *model.NewLotEvent) error {
 	prevBalance, err := r.FindPlayerBalance(e.Owner.Hex())
 	if err != nil {
 		return err
 	}
-	query := fmt.Sprintf("UPDATE Lots SET owner='%s', timeFirst='%s', timeSecond='%s', value='%s', price='%d', snapshot='%s' WHERE address='%s';",
+	prevSnap, err := r.FindLotSnap(e.LotAddr)
+	if err != nil {
+		return err
+	}
+	query := fmt.Sprintf("UPDATE Lots SET owner='%s', timeFirst='%s', timeSecond='%s', value='%s', price='%d', snapshot='%s', prevSnapshot='%s' WHERE address='%s';",
 		e.Owner.Hex(),
 		e.TimeFirst.String(),
 		e.TimeSecond.String(),
 		e.Value.String(),
 		e.Price,
 		e.LotSnap.String(),
+		prevSnap.String(),
 		e.LotAddr.String(),
 	)
 	_, err = r.store.db.Exec(query)
 	if err != nil {
 		return err
 	}
+	NewLot, err := r.FindLotFromAddress(e.LotAddr)
+	if err != nil {
+		return err
+	}
+	r.store.LotsChan <- NewLot
 	newBalance := big.NewInt(0)
 	newBalance.Sub(prevBalance, e.Price)
 	query2 := fmt.Sprintf("UPDATE Rounds SET bsnap='%s' WHERE address='%s';",
@@ -197,6 +302,11 @@ func (r *Repository) NewLot(e *model.NewLotEvent) error {
 		newBalance.String(),
 		e.Owner.Hex())
 	_, err = r.store.db.Exec(query3)
+	if err != nil {
+		return err
+	}
+	NewPlayer, err := r.FindPlayerFromAddress(e.Owner)
+	r.store.PlayersChan <- NewPlayer
 	return err
 }
 
@@ -205,19 +315,28 @@ func (r *Repository) BuyLot(e *model.BuyLotEvent) error {
 	if err != nil {
 		return err
 	}
-	query := fmt.Sprintf("UPDATE Lots SET owner='%s', price='%d', snapshot='%s' WHERE address='%s';",
+	prevSnap, err := r.FindLotSnap(e.LotAddr)
+	if err != nil {
+		return err
+	}
+	query := fmt.Sprintf("UPDATE Lots SET owner='%s', price='%d', snapshot='%s', prevSnapshot='%s' WHERE address='%s';",
 		e.Sender.Hex(),
 		e.Price,
 		e.LotSnap.String(),
+		prevSnap.String(),
 		e.LotAddr.String(),
 	)
 	_, err = r.store.db.Exec(query)
 	if err != nil {
 		log.Fatal(err)
 	}
+	NewLot, err := r.FindLotFromAddress(e.LotAddr)
+	if err != nil {
+		return err
+	}
+	r.store.LotsChan <- NewLot
 	newBalance := big.NewInt(0)
 	newBalance.Sub(prevBalance, e.Price)
-
 	query2 := fmt.Sprintf("UPDATE Rounds SET bsnap='%s' WHERE address='%s';",
 		e.BalancesSnap.String(),
 		e.RoundAddr.Hex())
@@ -229,6 +348,34 @@ func (r *Repository) BuyLot(e *model.BuyLotEvent) error {
 		newBalance.String(),
 		e.Sender.Hex())
 	_, err = r.store.db.Exec(query3)
+	if err != nil {
+		return err
+	}
+	PlayerSend, err := r.FindPlayerFromAddress(e.Sender)
+	if err != nil {
+		return err
+	}
+	r.store.PlayersChan <- PlayerSend
+	prevOwner, err := r.FindLotOwner(e.LotAddr)
+	if err != nil {
+		return err
+	}
+	balancePrevOwner, err := r.FindPlayerBalance(prevOwner.Hex())
+	if err != nil {
+		return err
+	}
+	newBalancePrevOwner := new(big.Int)
+	newBalancePrevOwner.Add(balancePrevOwner, e.Price)
+	query4 := fmt.Sprintf("UPDATE Players SET balance='%s' WHERE address='%s';",
+		newBalancePrevOwner.String(),
+		prevOwner.Hex(),
+	)
+	_, err = r.store.db.Exec(query4)
+	if err != nil {
+		return err
+	}
+	PlayerPrev, err := r.FindPlayerFromAddress(*prevOwner)
+	r.store.PlayersChan <- PlayerPrev
 	return err
 }
 
@@ -415,7 +562,7 @@ func (r *Repository) AllLots() ([]*model.Lot, error) {
 		lot := &model.Lot{}
 		err := rows.Scan(&lot.Address, &lot.RoundAddress,
 			&lot.Owner, &lot.TimeFirst, &lot.TimeSecond, &lot.Value,
-			&lot.Price, &lot.ReceiveTokens, &lot.Snapshot)
+			&lot.Price, &lot.ReceiveTokens, &lot.Snapshot, &lot.PrevSnapshot)
 		if err != nil {
 			return nil, err
 		}
