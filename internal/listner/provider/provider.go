@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/qwertyqq2/soc-server/apigroup"
+	"github.com/qwertyqq2/soc-server/internal/app/apiserver/hub"
 	"github.com/qwertyqq2/soc-server/internal/configs"
 	"github.com/qwertyqq2/soc-server/internal/listner/provider/model"
 	"github.com/qwertyqq2/soc-server/internal/listner/provider/store"
@@ -25,6 +26,17 @@ type Provider struct {
 	contractAddress common.Address
 	api             *apigroup.Apigroup
 	Store           *store.Store
+	hub             *hub.Hub
+}
+
+func New(hub *hub.Hub) (*Provider, error) {
+	p := &Provider{}
+	err := p.SetUp()
+	if err != nil {
+		return nil, err
+	}
+	p.hub = hub
+	return p, nil
 }
 
 func NewDB(dbURL string) (*sql.DB, error) {
@@ -146,9 +158,11 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.Store.Repository().NewLot(newLotEvent); err != nil {
+				resp, err := p.Store.Repository().NewLot(newLotEvent)
+				if err != nil {
 					return err
 				}
+				p.hub.Broadcast(resp)
 				log.Println("event-new lot ", newLotEvent)
 
 			case model.BuyLotEventHash:
@@ -157,9 +171,11 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.Store.Repository().BuyLot(buyLotEvent); err != nil {
+				resp, err := p.Store.Repository().BuyLot(buyLotEvent)
+				if err != nil {
 					return err
 				}
+				p.hub.Broadcast(resp)
 				log.Println("event-buy lot ", buyLotEvent)
 
 			case model.SendLotEventHash:

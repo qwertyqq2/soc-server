@@ -215,7 +215,7 @@ func TestNewLot(t *testing.T) {
 		BalancesSnap: bsnap,
 	}
 
-	if err := s.Repository().NewLot(newLotEvent); err != nil {
+	if err, _ := s.Repository().NewLot(newLotEvent); err != nil {
 		t.Error(err)
 	}
 }
@@ -256,7 +256,7 @@ func TestBuyLot(t *testing.T) {
 		BalancesSnap: bsnap,
 	}
 
-	if err := s.Repository().BuyLot(buyLotEvent); err != nil {
+	if err, _ := s.Repository().BuyLot(buyLotEvent); err != nil {
 		t.Error(err)
 	}
 }

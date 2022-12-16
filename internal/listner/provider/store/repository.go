@@ -261,14 +261,14 @@ func (r *Repository) FindPlayerFromAddress(playerAddr common.Address) (*model.Pl
 	return player, nil
 }
 
-func (r *Repository) NewLot(e *model.NewLotEvent) error {
+func (r *Repository) NewLot(e *model.NewLotEvent) (*model.Resp, error) {
 	prevBalance, err := r.FindPlayerBalance(e.Owner.Hex())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	prevSnap, err := r.FindLotSnap(e.LotAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	query := fmt.Sprintf("UPDATE Lots SET owner='%s', timeFirst='%s', timeSecond='%s', value='%s', price='%d', snapshot='%s', prevSnapshot='%s' WHERE address='%s';",
 		e.Owner.Hex(),
@@ -282,13 +282,14 @@ func (r *Repository) NewLot(e *model.NewLotEvent) error {
 	)
 	_, err = r.store.db.Exec(query)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	NewLot, err := r.FindLotFromAddress(e.LotAddr)
+	newLot, err := r.FindLotFromAddress(e.LotAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	r.store.LotsChan <- NewLot
+	newLotWrapper := model.NewLotWrapper(newLot)
+
 	newBalance := big.NewInt(0)
 	newBalance.Sub(prevBalance, e.Price)
 	query2 := fmt.Sprintf("UPDATE Rounds SET bsnap='%s' WHERE address='%s';",
@@ -296,28 +297,31 @@ func (r *Repository) NewLot(e *model.NewLotEvent) error {
 		e.RoundAddr.Hex())
 	_, err = r.store.db.Exec(query2)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	query3 := fmt.Sprintf("UPDATE Players SET balance='%s' WHERE address='%s';",
 		newBalance.String(),
 		e.Owner.Hex())
 	_, err = r.store.db.Exec(query3)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	NewPlayer, err := r.FindPlayerFromAddress(e.Owner)
-	r.store.PlayersChan <- NewPlayer
-	return err
+	newPlayer, err := r.FindPlayerFromAddress(e.Owner)
+	newPlayerWrapper := model.NewPlayerWrapper(newPlayer)
+
+	resp := model.NewResp(newLotWrapper, newPlayerWrapper)
+
+	return resp, nil
 }
 
-func (r *Repository) BuyLot(e *model.BuyLotEvent) error {
+func (r *Repository) BuyLot(e *model.BuyLotEvent) (*model.Resp, error) {
 	prevBalance, err := r.FindPlayerBalance(e.Sender.Hex())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	prevSnap, err := r.FindLotSnap(e.LotAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	query := fmt.Sprintf("UPDATE Lots SET owner='%s', price='%d', snapshot='%s', prevSnapshot='%s' WHERE address='%s';",
 		e.Sender.Hex(),
@@ -330,11 +334,11 @@ func (r *Repository) BuyLot(e *model.BuyLotEvent) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	NewLot, err := r.FindLotFromAddress(e.LotAddr)
+	newLot, err := r.FindLotFromAddress(e.LotAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	r.store.LotsChan <- NewLot
+	lotWrapper := model.NewLotWrapper(newLot)
 	newBalance := big.NewInt(0)
 	newBalance.Sub(prevBalance, e.Price)
 	query2 := fmt.Sprintf("UPDATE Rounds SET bsnap='%s' WHERE address='%s';",
@@ -342,27 +346,27 @@ func (r *Repository) BuyLot(e *model.BuyLotEvent) error {
 		e.RoundAddr.Hex())
 	_, err = r.store.db.Exec(query2)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	query3 := fmt.Sprintf("UPDATE Players SET balance='%s' WHERE address='%s';",
 		newBalance.String(),
 		e.Sender.Hex())
 	_, err = r.store.db.Exec(query3)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	PlayerSend, err := r.FindPlayerFromAddress(e.Sender)
+	player1, err := r.FindPlayerFromAddress(e.Sender)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	r.store.PlayersChan <- PlayerSend
+	playerWrapper1 := model.NewPlayerWrapper(player1)
 	prevOwner, err := r.FindLotOwner(e.LotAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	balancePrevOwner, err := r.FindPlayerBalance(prevOwner.Hex())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	newBalancePrevOwner := new(big.Int)
 	newBalancePrevOwner.Add(balancePrevOwner, e.Price)
@@ -372,11 +376,12 @@ func (r *Repository) BuyLot(e *model.BuyLotEvent) error {
 	)
 	_, err = r.store.db.Exec(query4)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	PlayerPrev, err := r.FindPlayerFromAddress(*prevOwner)
-	r.store.PlayersChan <- PlayerPrev
-	return err
+	player2, err := r.FindPlayerFromAddress(*prevOwner)
+	playerWrapper2 := model.NewPlayerWrapper(player2)
+	resp := model.NewResp(lotWrapper, playerWrapper1, playerWrapper2)
+	return resp, nil
 }
 
 func (r *Repository) SendLot(e *model.SendLotEvent) error {
@@ -526,33 +531,9 @@ func (r *Repository) AllPlayers() ([]*model.Player, error) {
 	return players, nil
 }
 
-func (r *Repository) AllRounds() ([]*model.Round, error) {
-	query := fmt.Sprintf("SELECT * FROM Rounds;")
-	rows, err := r.store.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	rounds := make([]*model.Round, 0)
-	for rows.Next() {
-		round := &model.Round{}
-		err := rows.Scan(&round.Address, &round.Deposit,
-			&round.BalancesSnap, &round.ParamsSnap, &round.Spos, &round.Sneg, &round.Reserve)
-		if err != nil {
-			return nil, err
-		}
-		rounds = append(rounds, round)
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-	return rounds, nil
-}
-
-func (r *Repository) AllLots() ([]*model.Lot, error) {
-	query := fmt.Sprintf("SELECT * FROM Lots;")
-	rows, err := r.store.db.Query(query)
+func (r *Repository) All() (*model.Resp, error) {
+	query1 := fmt.Sprintf("SELECT * FROM Lots;")
+	rows, err := r.store.db.Query(query1)
 	if err != nil {
 		return nil, err
 	}
@@ -572,5 +553,27 @@ func (r *Repository) AllLots() ([]*model.Lot, error) {
 	if err != nil {
 		return nil, err
 	}
-	return lots, nil
+	query := fmt.Sprintf("SELECT * FROM Rounds;")
+	rows, err = r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	rounds := make([]*model.Round, 0)
+	for rows.Next() {
+		round := &model.Round{}
+		err := rows.Scan(&round.Address, &round.Deposit,
+			&round.BalancesSnap, &round.ParamsSnap, &round.Spos, &round.Sneg, &round.Reserve)
+		if err != nil {
+			return nil, err
+		}
+		rounds = append(rounds, round)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	resp := model.NewResp(rounds, lots)
+	return resp, nil
 }

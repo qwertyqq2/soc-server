@@ -43,6 +43,40 @@ type Lot struct {
 	PrevSnapshot  string `json:"prevSnapshot"`
 }
 
+type LotWrapper struct {
+	Name string `json:"name"`
+	Data *Lot   `json:"data"`
+}
+
+func NewLotWrapper(lot *Lot) *LotWrapper {
+	return &LotWrapper{
+		Name: "lot",
+		Data: lot,
+	}
+}
+
+type PlayerWrapper struct {
+	Name string  `json:"name"`
+	Data *Player `json:"data"`
+}
+
+func NewPlayerWrapper(player *Player) *PlayerWrapper {
+	return &PlayerWrapper{
+		Name: "player",
+		Data: player,
+	}
+}
+
+type Resp struct {
+	resp []interface{}
+}
+
+func NewResp(data ...interface{}) *Resp {
+	return &Resp{
+		resp: data,
+	}
+}
+
 func Base64ToInt(s string) (*big.Int, error) {
 	data, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
