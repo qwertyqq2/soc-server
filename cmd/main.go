@@ -16,7 +16,6 @@ func main() {
 	// provider.SetUp()
 	// go provider.ListenEvent()
 	// wg.Wait()
-
 	conf := configs.GetConfig()
 	if err := apiserver.Start(conf); err != nil {
 		log.Fatal(err)

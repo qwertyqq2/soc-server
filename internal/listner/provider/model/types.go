@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"math/big"
 )
 
@@ -43,6 +44,18 @@ type Lot struct {
 	PrevSnapshot  string `json:"prevSnapshot"`
 }
 
+type RoundWrapper struct {
+	Name string `json:"name"`
+	Data *Round `json:"data"`
+}
+
+func NewRoundWrapper(round *Round) *RoundWrapper {
+	return &RoundWrapper{
+		Name: "round",
+		Data: round,
+	}
+}
+
 type LotWrapper struct {
 	Name string `json:"name"`
 	Data *Lot   `json:"data"`
@@ -75,6 +88,19 @@ func NewResp(data ...interface{}) *Resp {
 	return &Resp{
 		resp: data,
 	}
+}
+
+func (r *Resp) GetResp() []interface{} {
+	return r.resp
+}
+
+func (resp *Resp) Marshal() ([]byte, error) {
+	data := resp.GetResp()
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	return jsonData, nil
 }
 
 func Base64ToInt(s string) (*big.Int, error) {

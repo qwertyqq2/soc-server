@@ -1,29 +1,15 @@
-package store
+package model
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/qwertyqq2/soc-server/internal/listner/provider/model"
 )
 
-type LotResp struct {
-	Name string     `json:"name"`
-	Data *model.Lot `json:"data"`
-}
-
-type PlayerResp struct {
-	Name string        `json:"name"`
-	Data *model.Player `json:"data"`
-}
-
-type Resp struct {
-	resp []interface{}
-}
-
-func NewLotTest() *model.Lot {
+func NewLotTest() *LotWrapper {
 	addr := "0xfB3Ee894f27d8d6798f0034d7763b7ad46C31B92"
 	roundAddr := "0x5f63C25ee7f258706803E97d6a866cDe363201c2"
 	owner := "0xFFFbEE9C752A1ca301A3821308F630609a54369A"
@@ -33,7 +19,7 @@ func NewLotTest() *model.Lot {
 	price := 60
 	snap := "15468303776996484186685289508981412665698293446761833792330076793367195714725"
 	prevSnap := "57003951752417535200923101159811040833146496380398724999470920633816778075019"
-	return &model.Lot{
+	lot := &Lot{
 		Address:      addr,
 		RoundAddress: roundAddr,
 		Owner:        owner,
@@ -44,74 +30,68 @@ func NewLotTest() *model.Lot {
 		Snapshot:     snap,
 		PrevSnapshot: prevSnap,
 	}
+	lotWrapper := NewLotWrapper(lot)
+	return lotWrapper
 }
 
-func NewPlayerTest() *model.Player {
+func NewPlayerTest() *PlayerWrapper {
 	addr := "0xFFFbEE9C752A1ca301A3821308F630609a54369A"
 	roundAddr := "0x5f63C25ee7f258706803E97d6a866cDe363201c2"
 	balance := "850"
-	return &model.Player{
+	player := &Player{
 		Address:      addr,
 		RoundAddress: roundAddr,
 		Balance:      balance,
 	}
+	playerWrapper := NewPlayerWrapper(player)
+	return playerWrapper
 }
 
-func TestNewResp(t *testing.T) {
-	lot1 := NewLotTest()
-	player := NewPlayerTest()
-	lot2 := NewLotTest()
-
-	lot1Resp := &LotResp{
-		Name: "lot",
-		Data: lot1,
+func NewRespTest(data ...interface{}) *Resp {
+	return &Resp{
+		resp: data,
 	}
+}
 
-	lot2Resp := &LotResp{
-		Name: "lot",
-		Data: lot2,
-	}
-
-	playerResp := &PlayerResp{
-		Name: "player",
-		Data: player,
-	}
-
-	r := &Resp{}
-	r.resp = append(r.resp, lot1Resp)
-	r.resp = append(r.resp, lot2Resp)
-	r.resp = append(r.resp, playerResp)
-	jsonObj, err := json.Marshal(r.resp)
-	if err != nil {
-		t.Error(err)
-	}
+func UnmarshalResp(jsonResp []byte) {
 	var e interface{}
-
-	if err := json.Unmarshal(jsonObj, &e); err != nil {
-		t.Error(err)
+	if err := json.Unmarshal(jsonResp, &e); err != nil {
+		log.Fatal(err)
 	}
-
-	m := e.([]interface{})
+	m, ok := e.([]interface{})
+	if !ok {
+		log.Println("not ok")
+	}
 	for _, obj := range m {
-		newObj, err := obj.(map[string]interface{})
-		if !err {
-			t.Error(err)
+		newObj, ok := obj.(map[string]interface{})
+		if !ok {
+			log.Fatal(ok)
 		}
 		switch newObj["name"] {
 		case "lot":
-			lot := &model.Lot{}
+			lot := &Lot{}
 			err := mapstructure.Decode(newObj["data"], lot)
 			if err != nil {
-				t.Error(err)
+				log.Fatal(err)
 			}
-			fmt.Println(lot)
+			fmt.Println("LOT", lot)
 		case "player":
-			player := &model.Player{}
+			player := &Player{}
 			err := mapstructure.Decode(newObj["data"], player)
 			if err != nil {
-				t.Error(err)
+				log.Fatal(err)
 			}
-			fmt.Println(player)
+			fmt.Println("PLAYER", player)
 		}
 	}
+}
+
+func TestRespInput(t *testing.T) {
+	lot := NewLotTest()
+	lot2 := NewLotTest()
+	//lots := []*Lot{lot, lot2}
+	player := NewPlayerTest()
+	resp := NewRespTest(lot, player, lot2)
+	jsonResp, _ := resp.Marshal()
+	UnmarshalResp(jsonResp)
 }

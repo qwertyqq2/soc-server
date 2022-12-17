@@ -30,12 +30,13 @@ type Provider struct {
 }
 
 func New(hub *hub.Hub) (*Provider, error) {
-	p := &Provider{}
+	p := &Provider{
+		hub: hub,
+	}
 	err := p.SetUp()
 	if err != nil {
 		return nil, err
 	}
-	p.hub = hub
 	return p, nil
 }
 
@@ -60,7 +61,7 @@ func (p *Provider) SetUp() error {
 	}
 
 	p.Store = store.New(db)
-
+	log.Println("Provider connect....")
 	pClient, err := ethclient.Dial(conf.ParamsProvider.ProviderURL)
 	if err != nil {
 		return err
@@ -69,14 +70,22 @@ func (p *Provider) SetUp() error {
 	if err != nil {
 		return err
 	}
+
 	p.contractAddress = common.HexToAddress(conf.ParamsProvider.GroupContractAddress)
 	pContractClient, err := apigroup.NewApigroup(p.contractAddress, p.client)
 	if err != nil {
 		return err
 	}
 	p.api = pContractClient
-	log.Println("Provider created: ", p.contractAddress.Hex())
 	return nil
+}
+
+func (p *Provider) InitData() (*model.Resp, error) {
+	resp, err := p.Store.Repository().All()
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (p *Provider) ListenEvent() error {
@@ -162,7 +171,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				p.hub.Broadcast(resp)
+				p.hub.Broadcast(resp.GetResp())
 				log.Println("event-new lot ", newLotEvent)
 
 			case model.BuyLotEventHash:
@@ -175,7 +184,7 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				p.hub.Broadcast(resp)
+				p.hub.Broadcast(resp.GetResp())
 				log.Println("event-buy lot ", buyLotEvent)
 
 			case model.SendLotEventHash:

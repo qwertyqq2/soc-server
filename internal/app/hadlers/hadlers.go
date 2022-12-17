@@ -22,7 +22,8 @@ type handler struct {
 
 func NewHander(p *provider.Provider, hub *hub.Hub) *handler {
 	return &handler{
-		hub: hub,
+		provider: p,
+		hub:      hub,
 	}
 }
 
@@ -52,49 +53,47 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 	}
 	defer conn.Close()
 	doneChan := make(chan bool)
-	done := false
-	go func() {
-		select {
-		case ok := <-doneChan:
-			if ok {
-				done = true
-			}
-		}
-	}()
+	//doneInit := make(chan bool)
 	go h.initLoad(conn, senderAddr, doneChan)
-	go h.listenHub(conn, senderAddr, done)
-}
-
-func (h *handler) listenHub(conn *websocket.Conn, senderAddr string, done bool) {
-	if done {
-		for {
-			select {
-			case data := <-h.hub.Broadcasters[senderAddr]:
-				jsonData, err := json.Marshal(data)
-				if err != nil {
-					return
-				}
-				err = conn.WriteMessage(websocket.TextMessage, jsonData)
-				if err != nil {
-					return
-				}
-			}
-		}
+	go h.listenHub(conn, senderAddr, doneChan)
+	for {
 	}
 }
 
 func (h *handler) initLoad(conn *websocket.Conn, senderAddr string, doneChan chan bool) {
-	data, err := h.provider.Store.Repository().All()
+	resp, err := h.provider.InitData()
 	if err != nil {
-		return
+		log.Println(err)
 	}
-	jsonData, err := json.Marshal(data)
+	jsonData, err := resp.Marshal()
 	if err != nil {
-		return
+		log.Println(err)
 	}
 	err = conn.WriteMessage(websocket.TextMessage, jsonData)
 	if err != nil {
-		return
+		log.Println(err)
 	}
 	doneChan <- true
+}
+
+func (h *handler) listenHub(conn *websocket.Conn, senderAddr string, doneChan chan bool) {
+	select {
+	case ok := <-doneChan:
+		if ok {
+			log.Println("Okey")
+			for {
+				select {
+				case data := <-h.hub.Broadcasters[senderAddr]:
+					jsonData, err := json.Marshal(data)
+					if err != nil {
+						return
+					}
+					err = conn.WriteMessage(websocket.TextMessage, jsonData)
+					if err != nil {
+						return
+					}
+				}
+			}
+		}
+	}
 }

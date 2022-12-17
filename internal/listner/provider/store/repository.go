@@ -538,7 +538,7 @@ func (r *Repository) All() (*model.Resp, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	lots := make([]*model.Lot, 0)
+	toresp := make([]interface{}, 0)
 	for rows.Next() {
 		lot := &model.Lot{}
 		err := rows.Scan(&lot.Address, &lot.RoundAddress,
@@ -547,7 +547,8 @@ func (r *Repository) All() (*model.Resp, error) {
 		if err != nil {
 			return nil, err
 		}
-		lots = append(lots, lot)
+		lotWrapper := model.NewLotWrapper(lot)
+		toresp = append(toresp, lotWrapper)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -559,7 +560,6 @@ func (r *Repository) All() (*model.Resp, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	rounds := make([]*model.Round, 0)
 	for rows.Next() {
 		round := &model.Round{}
 		err := rows.Scan(&round.Address, &round.Deposit,
@@ -567,13 +567,14 @@ func (r *Repository) All() (*model.Resp, error) {
 		if err != nil {
 			return nil, err
 		}
-		rounds = append(rounds, round)
+		roundWrapper := model.NewRoundWrapper(round)
+		toresp = append(toresp, roundWrapper)
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, err
 	}
-
-	resp := model.NewResp(rounds, lots)
+	fmt.Println(toresp...)
+	resp := model.NewResp(toresp...)
 	return resp, nil
 }
