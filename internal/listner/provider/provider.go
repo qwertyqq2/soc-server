@@ -167,12 +167,12 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
+				log.Println("event-new lot ", newLotEvent)
 				resp, err := p.Store.Repository().NewLot(newLotEvent)
 				if err != nil {
 					return err
 				}
 				p.hub.Broadcast(resp.GetResp())
-				log.Println("event-new lot ", newLotEvent)
 
 			case model.BuyLotEventHash:
 				buyLotEvent := &model.BuyLotEvent{}
@@ -180,12 +180,13 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
+				log.Println("event-buy lot ", buyLotEvent)
+
 				resp, err := p.Store.Repository().BuyLot(buyLotEvent)
 				if err != nil {
 					return err
 				}
 				p.hub.Broadcast(resp.GetResp())
-				log.Println("event-buy lot ", buyLotEvent)
 
 			case model.SendLotEventHash:
 				sendLotEvent := &model.SendLotEvent{}

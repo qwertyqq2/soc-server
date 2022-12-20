@@ -9,6 +9,7 @@ type Hub struct {
 func NewHub() *Hub {
 	clients := make(map[string]bool, 10)
 	broadcasters := make(map[string]chan []interface{}, 10)
+
 	return &Hub{
 		Clients:      clients,
 		Broadcasters: broadcasters,
@@ -17,6 +18,7 @@ func NewHub() *Hub {
 
 func (hub *Hub) NewClient(addr string) {
 	hub.Clients[addr] = true
+	hub.Broadcasters[addr] = make(chan []interface{}, 10)
 }
 
 func (hub *Hub) Broadcast(data []interface{}) {

@@ -53,10 +53,16 @@ func (h *handler) Connect(w http.ResponseWriter, r *http.Request, p httprouter.P
 	}
 	defer conn.Close()
 	doneChan := make(chan bool)
+	errChan := make(chan error)
 	//doneInit := make(chan bool)
 	go h.initLoad(conn, senderAddr, doneChan)
-	go h.listenHub(conn, senderAddr, doneChan)
+	go h.listenHub(conn, senderAddr, doneChan, errChan)
 	for {
+		select {
+		case err := <-errChan:
+			log.Println(err)
+			return
+		}
 	}
 }
 
@@ -76,21 +82,20 @@ func (h *handler) initLoad(conn *websocket.Conn, senderAddr string, doneChan cha
 	doneChan <- true
 }
 
-func (h *handler) listenHub(conn *websocket.Conn, senderAddr string, doneChan chan bool) {
+func (h *handler) listenHub(conn *websocket.Conn, senderAddr string, doneChan chan bool, errChan chan error) {
 	select {
 	case ok := <-doneChan:
 		if ok {
-			log.Println("Okey")
 			for {
 				select {
 				case data := <-h.hub.Broadcasters[senderAddr]:
 					jsonData, err := json.Marshal(data)
 					if err != nil {
-						return
+						errChan <- err
 					}
 					err = conn.WriteMessage(websocket.TextMessage, jsonData)
 					if err != nil {
-						return
+						errChan <- err
 					}
 				}
 			}

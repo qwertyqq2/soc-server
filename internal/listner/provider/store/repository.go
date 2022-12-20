@@ -554,8 +554,8 @@ func (r *Repository) All() (*model.Resp, error) {
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf("SELECT * FROM Rounds;")
-	rows, err = r.store.db.Query(query)
+	query2 := fmt.Sprintf("SELECT * FROM Rounds;")
+	rows, err = r.store.db.Query(query2)
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +574,26 @@ func (r *Repository) All() (*model.Resp, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(toresp...)
+	query3 := fmt.Sprintf("SELECT * FROM Players;")
+	rows, err = r.store.db.Query(query3)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		player := &model.Player{}
+		err := rows.Scan(&player.Address, &player.RoundAddress, &player.Balance, &player.Nwin,
+			&player.N, &player.Spos, &player.Sneg)
+		if err != nil {
+			return nil, err
+		}
+		playerWrapper := model.NewPlayerWrapper(player)
+		toresp = append(toresp, playerWrapper)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
 	resp := model.NewResp(toresp...)
 	return resp, nil
 }
