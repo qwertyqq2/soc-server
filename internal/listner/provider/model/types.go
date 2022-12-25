@@ -14,6 +14,7 @@ type Round struct {
 	Spos         string `json:"Spos"`
 	Sneg         string `json:"Sneg"`
 	Reserve      string `json:"reserve"`
+	MaxRange     int64  `json:"maxRange"`
 }
 
 type PendingPlayer struct {

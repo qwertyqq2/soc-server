@@ -307,7 +307,7 @@ func TestUpdatePlayer(t *testing.T) {
 		Sneg:      sneg,
 	}
 
-	if err := s.Repository().UpdatePlayer(updateEvent); err != nil {
+	if _, err := s.Repository().UpdatePlayer(updateEvent); err != nil {
 		t.Error(err)
 	}
 }
@@ -351,7 +351,7 @@ func TestReceiveLot(t *testing.T) {
 		BalancesSnap: bsnap,
 	}
 
-	if err := s.Repository().ReceiveLot(receiveEvent); err != nil {
+	if _, err := s.Repository().ReceiveLot(receiveEvent); err != nil {
 		t.Error(err)
 	}
 }

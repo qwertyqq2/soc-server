@@ -5,7 +5,8 @@ CREATE TABLE `Rounds` (
 	`psnap` VARCHAR(255) DEFAULT '',
 	`Spos` VARCHAR(255) DEFAULT '',
 	`Sneg` VARCHAR(255) DEFAULT '',
-	`reserve` VARCHAR(255) DEFAULT ''
+	`reserve` VARCHAR(255) DEFAULT '',
+	`maxRange` INT(255) DEFAULT 0
 );
 
 CREATE TABLE `PendingPlayers` (

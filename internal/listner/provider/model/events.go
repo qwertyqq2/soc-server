@@ -19,6 +19,8 @@ type EnterRoundEvent struct {
 
 type StartRoundEvent struct {
 	RoundAddr    common.Address `abi:"_roundAddress"`
+	Reserve      *big.Int       `abi:"_reserve"`
+	MaxRange     *big.Int       `abi:"_maxRange"`
 	BalancesSnap *big.Int       `abi:"_bsnap"`
 	ParamsSnap   *big.Int       `abi:"_psnap"`
 }
@@ -71,12 +73,9 @@ type ReceiveLotEvent struct {
 	Balance      *big.Int       `abi:"_balance"`
 	SposDelta    *big.Int       `abi:"_SposDelta"`
 	SnegDelta    *big.Int       `abi:"_SnegDelta"`
+	Reserve      *big.Int       `abi:"_reserve"`
 	ParamsSnap   *big.Int       `abi:"_psnap"`
 	BalancesSnap *big.Int       `abi:"_bsnap"`
-}
-
-type PickEvent struct {
-	Msg string `abi:"_msg"`
 }
 
 var (
@@ -84,7 +83,7 @@ var (
 
 	EnterRoundEventHash = crypto.Keccak256Hash([]byte("EnterRoundEvent(address,address)")).Hex()
 
-	StartRoundEventHash = crypto.Keccak256Hash([]byte("StartRoundEvent(address,uint256,uint256)")).Hex()
+	StartRoundEventHash = crypto.Keccak256Hash([]byte("StartRoundEvent(address,uint256,uint256,uint256,uint256)")).Hex()
 
 	CreatedLotEventHash = crypto.Keccak256Hash([]byte("CreatedLotEvent(address,address)")).Hex()
 
@@ -96,9 +95,5 @@ var (
 
 	UpdatePlayerParamsHash = crypto.Keccak256Hash([]byte("UpdatePlayerParams(address,address,uint256,uint256,uint256,uint256)")).Hex()
 
-	ReceiveLotEventHash = crypto.Keccak256Hash([]byte("ReceiveLotEvent(address,address,address,uint256,uint256,uint256,uint256,uint256)")).Hex()
-
-	PickEventHash = crypto.Keccak256Hash([]byte("PickEvent(string)")).Hex()
-
-	UpdateLionData = crypto.Keccak256Hash([]byte("LionDotaEvent(uint256)")).Hex()
+	ReceiveLotEventHash = crypto.Keccak256Hash([]byte("ReceiveLotEvent(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256)")).Hex()
 )

@@ -205,9 +205,11 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.Store.Repository().UpdatePlayer(updateParamsEvent); err != nil {
+				resp, err := p.Store.Repository().UpdatePlayer(updateParamsEvent)
+				if err != nil {
 					return err
 				}
+				p.hub.Broadcast(resp.GetResp())
 				log.Println("event-update params ", updateParamsEvent)
 
 			case model.ReceiveLotEventHash:
@@ -216,18 +218,13 @@ func (p *Provider) ListenEvent() error {
 				if err != nil {
 					return err
 				}
-				if err := p.Store.Repository().ReceiveLot(receiveLotEvent); err != nil {
-					return err
-				}
-				log.Println("event-receive lot ", receiveLotEvent)
-
-			case model.PickEventHash:
-				pickEvent := &model.PickEvent{}
-				err := groupAbi.UnpackIntoInterface(pickEvent, "PickEvent", logEvent.Data)
+				resp, err := p.Store.Repository().ReceiveLot(receiveLotEvent)
 				if err != nil {
 					return err
 				}
-				log.Println("event-pick!")
+				p.hub.Broadcast(resp.GetResp())
+				log.Println("event-receive lot ", receiveLotEvent)
+
 			}
 		}
 	}
